@@ -52,6 +52,16 @@ func (d *Drivers) ADD_DRIVER(id string, xCor float32, yCor float32) {
 	*d = append(*d, newDriver)
 }
 
+func (r *Riders) ADD_RIDER(id string, xCor float32, yCor float32) {
+	newRider := Rider{
+		Id: id,
+		x:  xCor,
+		y:  yCor,
+	}
+
+	*r = append(*r, newRider)
+}
+
 func main() {
 
 	var drivers Drivers
@@ -99,6 +109,17 @@ func main() {
 				drivers.ADD_DRIVER(argList[1], float32(xf), float32(yf))
 			}
 		case "ADD_RIDER":
+
+			if len(argList) < 4 {
+				fmt.Printf("arguments given %v expected 4", len(argList))
+
+			} else {
+				xf, _ := strconv.ParseFloat(argList[2], 32)
+				yf, _ := strconv.ParseFloat(argList[3], 32)
+				riders.ADD_RIDER(argList[1], float32(xf), float32(yf))
+			}
+
+			fmt.Printf("Riders: %+v", riders)
 		case "MATCH":
 		case "START_RIDE":
 		case "STOP_RIDE":
