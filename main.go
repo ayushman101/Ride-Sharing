@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -21,11 +22,12 @@ type Rider struct {
 }
 
 type Ride struct {
-	Id          string
-	RiderIndex  int32
-	DriverIndex int32
-	Bill        float32
-	Status      string // Matched |  Started |   Stopped.
+	Id             string
+	RiderIndex     int32
+	DriverIndex    int32 //driver index is 0 by default but is changed when ride is started
+	Bill           float32
+	Status         string  // Matched |  Started |   Stopped.
+	matchedDrivers []int32 //index of top 5 the drivers that have been matched
 }
 
 type Drivers []Driver
@@ -36,10 +38,26 @@ type Rides []Ride
 
 // returns a slice of Drivers Id under 5km radius in ascending order.
 // If distance is same then sort in lexicographically
-func (d *Drivers) NearestFive(sourceX float32, sourceY float32) ([]string, error) {
-	var Ids []string
+func (d *Drivers) NearestFive(sourceX float32, sourceY float32) []int32 {
+	var Ids []int32
 
-	return Ids, nil
+	it := 0
+
+	dri := *d
+
+	for i := 0; i < len(*d); i++ {
+		if it == 5 {
+			break
+		}
+
+		dist := math.Sqrt(math.Pow(float64(dri[i].x)-float64(sourceX), 2) + math.Pow(float64(dri[i].y)-float64(sourceY), 2))
+
+		if dist <= 5 {
+			Ids = append(Ids, int32(i))
+			it++
+		}
+	}
+	return Ids
 }
 
 func (d *Drivers) ADD_DRIVER(id string, xCor float32, yCor float32) {
@@ -60,6 +78,17 @@ func (r *Riders) ADD_RIDER(id string, xCor float32, yCor float32) {
 	}
 
 	*r = append(*r, newRider)
+}
+
+func (r *Riders) find(id string) (Rider, bool) {
+
+	for _, rider := range *r {
+		if rider.Id == id {
+			return rider, true
+		}
+	}
+
+	return Rider{}, false
 }
 
 func main() {
@@ -103,6 +132,7 @@ func main() {
 
 			if len(argList) < 4 {
 				fmt.Printf("arguments given %v expected 4", len(argList))
+				continue
 			} else {
 				xf, _ := strconv.ParseFloat(argList[2], 32)
 				yf, _ := strconv.ParseFloat(argList[3], 32)
@@ -112,15 +142,44 @@ func main() {
 
 			if len(argList) < 4 {
 				fmt.Printf("arguments given %v expected 4", len(argList))
-
+				continue
 			} else {
 				xf, _ := strconv.ParseFloat(argList[2], 32)
 				yf, _ := strconv.ParseFloat(argList[3], 32)
 				riders.ADD_RIDER(argList[1], float32(xf), float32(yf))
 			}
 
-			fmt.Printf("Riders: %+v", riders)
+			fmt.Printf("Riders: %+v\n", riders)
 		case "MATCH":
+			if len(argList) < 2 {
+				fmt.Printf("arguments given %v expected 2", len(argList))
+				continue
+			}
+			//rider must exist
+			rider, ok := riders.find(argList[1])
+
+			if !ok {
+				fmt.Printf("rider not found.\n use ADD_RIDER <RiderID> <x_Coordinate> <y_Coordinate>\n")
+				continue
+			}
+
+			//get list of all the drivers within 5km range
+			matchedDrivers := drivers.NearestFive(rider.x, rider.y)
+
+			if len(matchedDrivers) == 0 {
+				fmt.Printf("NO_DRIVERS_AVAILABLE\n")
+				continue
+			}
+
+			fmt.Printf("DRIVERS_MATCHED ")
+
+			for _, driverIndex := range matchedDrivers {
+				fmt.Printf("%s ", drivers[driverIndex].Id)
+			}
+			fmt.Printf("\n")
+
+			//create a ride with status : Matched
+
 		case "START_RIDE":
 		case "STOP_RIDE":
 		case "BILL":
