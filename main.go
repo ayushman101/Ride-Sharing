@@ -22,19 +22,48 @@ type Rider struct {
 }
 
 type Ride struct {
-	Id             string
-	RiderIndex     int32
-	DriverIndex    int32 //driver index is 0 by default but is changed when ride is started
-	Bill           float32
-	Status         string  // Matched |  Started |   Stopped.
-	matchedDrivers []int32 //index of top 5 the drivers that have been matched
+	Id          string
+	RiderIndex  int32
+	DriverIndex int32 //driver index is 0 by default but is changed when ride is started
+	Bill        float32
+	Status      string // Matched |  Started |   Stopped.
+}
+
+type MatchedRide struct {
+	RiderIndex    int32
+	MatchedRiders []int32
 }
 
 type Drivers []Driver
 type Riders []Rider
 type Rides []Ride
+type MatchedRides []MatchedRide
 
 //TODO: Need to String method to all the above types. Floats must be printed to 2 decimal places.
+
+//check if ride exist or not
+
+func (rd *Rides) findRide(Id string) (Ride, bool) {
+
+	for _, ride := range *rd {
+		if ride.Id == Id {
+			return ride, true
+		}
+	}
+
+	return Ride{}, false
+}
+
+// returns the true if there is a matched ride
+func (mr *MatchedRides) findRide(riderIndex int32) (MatchedRide, bool) {
+
+	for _, matchedRide := range *mr {
+		if matchedRide.RiderIndex == riderIndex {
+			return matchedRide, true
+		}
+	}
+	return MatchedRide{}, false
+}
 
 // returns a slice of Drivers Id under 5km radius in ascending order.
 // If distance is same then sort in lexicographically
@@ -122,15 +151,17 @@ func (r *Riders) ADD_RIDER(id string, xCor float32, yCor float32) {
 	*r = append(*r, newRider)
 }
 
-func (r *Riders) find(id string) (Rider, bool) {
+func (r *Riders) find(id string) (int32, bool) {
 
-	for _, rider := range *r {
-		if rider.Id == id {
-			return rider, true
+	riders := *r
+
+	for i := 0; i < len(riders); i++ {
+		if riders[i].Id == id {
+			return int32(i), true
 		}
 	}
 
-	return Rider{}, false
+	return -1, false
 }
 
 func main() {
@@ -138,6 +169,7 @@ func main() {
 	var drivers Drivers
 	var riders Riders
 	var rides Rides
+	var matchedRides MatchedRides
 
 	//Just to remove erros whild dev
 	_ = drivers
@@ -198,7 +230,7 @@ func main() {
 				continue
 			}
 			//rider must exist
-			rider, ok := riders.find(argList[1])
+			RiderIndex, ok := riders.find(argList[1])
 
 			if !ok {
 				fmt.Printf("rider not found.\n use ADD_RIDER <RiderID> <x_Coordinate> <y_Coordinate>\n")
@@ -206,7 +238,7 @@ func main() {
 			}
 
 			//get list of all the drivers within 5km range
-			matchedDrivers := drivers.NearestFive(rider.x, rider.y)
+			matchedDrivers := drivers.NearestFive(riders[RiderIndex].x, riders[RiderIndex].y)
 
 			if len(matchedDrivers) == 0 {
 				fmt.Printf("NO_DRIVERS_AVAILABLE\n")
@@ -220,9 +252,62 @@ func main() {
 			}
 			fmt.Printf("\n")
 
-			//create a ride with status : Matched
+			//create a MatchedRide
+			matchedRide := MatchedRide{
+				RiderIndex:    RiderIndex,
+				MatchedRiders: matchedDrivers,
+			}
 
+			matchedRides = append(matchedRides, matchedRide)
+			_ = matchedRides
 		case "START_RIDE":
+			//check if we have enough args
+			if len(argList) < 4 {
+				fmt.Printf("arguments given %v expected 4", len(argList))
+				continue
+			}
+			//check if the rider exist or not
+			RiderIndex, ok := riders.find(argList[3])
+
+			if !ok {
+				fmt.Printf("rider not found.\n use ADD_RIDER <RiderID> <x_Coordinate> <y_Coordinate>\n")
+				continue
+			}
+
+			//check if the ride is matched or not
+			matchedRide, ok := matchedRides.findRide(RiderIndex)
+
+			if !ok {
+				fmt.Println("INVALID RIDE")
+				continue
+			}
+
+			//check if the value of N is valid
+			n, _ := strconv.Atoi(argList[2])
+			if n > len(matchedRide.MatchedRiders) {
+				fmt.Println("INVALID RIDE")
+				continue
+			}
+
+			//check if ride already exists
+			_, ok = rides.findRide(argList[1])
+			if ok {
+				fmt.Println("INVALID RIDE")
+				continue
+			}
+
+			//create a ride with status: started.
+			ride := Ride{
+				Id:          argList[1],
+				RiderIndex:  RiderIndex,
+				DriverIndex: int32(n),
+				Bill:        50,
+				Status:      "Started",
+			}
+
+			rides = append(rides, ride)
+			fmt.Println("RIDE_STARTED ", ride.Id)
+
 		case "STOP_RIDE":
 		case "BILL":
 		default:
