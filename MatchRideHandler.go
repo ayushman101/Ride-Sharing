@@ -6,10 +6,6 @@ import (
 )
 
 func MatchRideHandler(argList []string) error {
-	if len(argList) < 2 {
-		fmt.Printf("arguments given %v expected 2", len(argList))
-		return errors.New("not enough args")
-	}
 
 	//rider must exist
 	RiderIndex, ok := riders.find(argList[1])
@@ -50,14 +46,14 @@ func MatchRideHandler(argList []string) error {
 		matchedRides = append(matchedRides, matchedRide)
 		_ = matchedRides
 
-	} else {
+		return nil
 
-		for i := 0; i < len(matchedRides); i++ {
-			if matchedRides[i].RiderIndex == RiderIndex {
-				matchedRides[i] = matchedRide
-			}
+	}
+
+	for i := 0; i < len(matchedRides); i++ {
+		if matchedRides[i].RiderIndex == RiderIndex {
+			matchedRides[i] = matchedRide
 		}
-
 	}
 
 	return nil

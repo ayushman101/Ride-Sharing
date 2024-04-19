@@ -7,12 +7,6 @@ import (
 )
 
 func StartRideHandler(argList []string) error {
-	//check if we have enough args
-	if len(argList) < 4 {
-		fmt.Printf("arguments given %v expected 4", len(argList))
-		return errors.New("not enough arguments")
-
-	}
 
 	//check if the rider exist or not
 	RiderIndex, ok := riders.find(argList[3])
@@ -41,7 +35,7 @@ func StartRideHandler(argList []string) error {
 	}
 
 	//check if ride already exists
-	_, ok = rides.findRide(argList[1])
+	_, ok = rides.findRidewithStatus(argList[1], STARTED)
 	if ok {
 		fmt.Println("INVALID_RIDE")
 		return errors.New("ride already exists")
@@ -52,12 +46,12 @@ func StartRideHandler(argList []string) error {
 		Id:          argList[1],
 		RiderIndex:  RiderIndex,
 		DriverIndex: matchedRide.MatchedRiders[(n)-1],
-		Bill:        50,
-		Status:      "STARTED",
+		Bill:        float64(BASE_FARE),
+		Status:      STARTED,
 	}
 
 	//Make rider busy
-	drivers[matchedRide.MatchedRiders[int32(n)-1]].status = "BUSY"
+	drivers[matchedRide.MatchedRiders[int32(n)-1]].status = BUSY
 
 	rides = append(rides, ride)
 	fmt.Println("RIDE_STARTED ", ride.Id)

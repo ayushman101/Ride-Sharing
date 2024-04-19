@@ -8,14 +8,8 @@ import (
 
 func StopRideHandler(argList []string) {
 
-	//check if we have enough args
-	if len(argList) < 5 {
-		fmt.Printf("arguments given %v expected 5", len(argList))
-		return
-	}
-
 	//check if the ride exists
-	ride, ok := rides.findRide(argList[1])
+	ride, ok := rides.findRidewithStatus(argList[1], STARTED)
 
 	if !ok {
 		fmt.Println("INVALID_RIDE")
@@ -42,21 +36,21 @@ func StopRideHandler(argList []string) {
 
 	// fmt.Println("Distance: ", dist)
 
-	ride.Bill += float64(dist * 6.5)
+	ride.Bill += float64(dist * float64(KM_CHARGE))
 
 	//get the minutes and add to bill
 	min, _ := strconv.Atoi(argList[4])
-	ride.Bill += (float64(min) * 2)
+	ride.Bill += (float64(min) * float64(MIN_CHARGE))
 
 	//adding tax to the bill :20%
-	ride.Bill *= 1.2
+	ride.Bill *= TAX
 
 	// ride.Bill = math.Round(ride.Bill*100) / 100
 	//replace the ride in actual slice of rides
 	for i := 0; i < len(rides); i++ {
 		if rides[i].Id == ride.Id {
 			rides[i].Bill = ride.Bill
-			rides[i].Status = "STOPPED"
+			rides[i].Status = STOPPED
 			break
 		}
 	}

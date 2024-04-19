@@ -101,7 +101,7 @@ func TestRide(t *testing.T) {
 		1,
 		0,
 		50,
-		"STARTED",
+		STARTED,
 	})
 
 	rides = append(rides, Ride{
@@ -109,22 +109,22 @@ func TestRide(t *testing.T) {
 		1,
 		0,
 		50,
-		"STOPPED",
+		STOPPED,
 	})
 
-	_, ok := rides.findRide("RIDE-001")
+	_, ok := rides.findRidewithStatus("RIDE-001", STARTED)
 
 	if !ok {
 		t.Errorf("ride should exist")
 	}
 
-	_, ok = rides.findCompletedRide("RIDE-002")
+	_, ok = rides.findRidewithStatus("RIDE-002", STOPPED)
 
 	if !ok {
 		t.Errorf("stopped ride not found")
 	}
 
-	_, ok = rides.findRide("RIDE-003")
+	_, ok = rides.findRidewithStatus("RIDE-003", STARTED)
 
 	if ok {
 		t.Errorf("ride should not exist")
@@ -134,7 +134,7 @@ func TestRide(t *testing.T) {
 
 	fmt.Println(rides)
 
-	_, ok = rides.findRide("RIDE-002")
+	_, ok = rides.findRidewithStatus("RIDE-002", STARTED)
 
 	if ok {
 		t.Errorf("ride wasn't removed")
@@ -186,5 +186,17 @@ func TestRiders(t *testing.T) {
 	if ok {
 		t.Errorf("rider should not exist")
 	}
+
+}
+func TestEntryPoint(t *testing.T) {
+	cliArgs := []string{
+		"input1.txt",
+	}
+
+	entrypoint(cliArgs)
+
+	cliArgs = []string{}
+
+	entrypoint(cliArgs)
 
 }

@@ -3,20 +3,16 @@ package main
 import "fmt"
 
 func calcBill(argList []string) {
-	if len(argList) < 2 {
-		fmt.Printf("arguments given %v expected 2", len(argList))
-		return
-	}
 
 	//find the ride
-	ride, ok := rides.findCompletedRide(argList[1])
+	ride, ok := rides.findRidewithStatus(argList[1], STOPPED)
 	if !ok {
 		fmt.Println("INVALID_RIDE")
 		return
 	}
 
 	//check if its completed or not
-	if ride.Status != "STOPPED" {
+	if ride.Status != STOPPED {
 		fmt.Printf("RIDE_NOT_COMPLETED\n")
 		return
 	}
